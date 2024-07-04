@@ -10,8 +10,8 @@ pub mod raft {
 
     #[derive(Debug)]
     pub struct RaftNode {
-        id: usize,
-        peers: Vec<usize>,
+        id: String,
+        peers: Vec<String>,
         state: State,
         current_term: usize,
         voted_for: Option<usize>,
@@ -30,7 +30,7 @@ pub mod raft {
 
     pub struct AppendEntriesArgs {
         term: usize,
-        leader_id: usize,
+        leader_id: String,
         prev_log_index: usize,
         prev_log_term: usize,
         entries: Vec<LogEntry>,
@@ -55,11 +55,12 @@ pub mod raft {
     }
 
     impl RaftNode {
-        pub fn new() -> Self {
+        pub fn new(id: String, peers: Vec<String>) -> Self {
             // Should set the ID
             Self {
-                id: 0,
+                id: id,
                 state: State::Follower,
+                peers: peers,
                 current_term: 0,
                 voted_for: None,
                 log: Vec::new(),
@@ -142,9 +143,9 @@ pub mod raft {
         }
 
         pub fn send_heartbeat(&self) {
-            let arg = AppendEntriesArgs {
+            let args = AppendEntriesArgs {
                 term: self.current_term,
-                leader_id: self.id,
+                leader_id: self.id.to_string(),
                 prev_log_term: self.log.last().unwrap().term,
                 prev_log_index: self.log.len() - 1,
                 entries: vec![],
