@@ -1,5 +1,11 @@
 use std::collections::HashMap;
 
+#[tarpc::service]
+pub trait RaftRPC {
+    async fn append_entries_rpc(args: AppendEntriesArgs) -> AppendEntriesReply;
+    async fn request_vote_rpc(args: RequestVoteArgs) -> RequestVoteReply;
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum State {
     Leader,
@@ -13,7 +19,7 @@ pub struct LogEntry {
     pub command: String,
 }
 
-#[derive()]
+#[derive(Clone, Debug)]
 pub struct AppendEntriesArgs {
     pub term: usize,
     pub leader_id: String,
@@ -23,13 +29,13 @@ pub struct AppendEntriesArgs {
     pub leader_commit: usize,
 }
 
-#[derive()]
+#[derive(Debug)]
 pub struct AppendEntriesReply {
     pub term: usize,
     pub success: bool,
 }
 
-#[derive()]
+#[derive(Debug)]
 pub struct RequestVoteArgs {
     pub term: usize,
     pub candidate_id: String,
@@ -37,12 +43,13 @@ pub struct RequestVoteArgs {
     pub last_log_term: usize,
 }
 
-#[derive()]
+#[derive(Debug)]
 pub struct RequestVoteReply {
     pub term: usize,
     pub granted: bool,
 }
 
+#[derive(Clone)]
 pub struct RaftNode {
     pub id: String,
     pub peers: Vec<String>,
@@ -72,7 +79,7 @@ impl RaftNode {
         }
     }
 
-    pub fn handle_append_entries(&mut self, args: AppendEntriesArgs) -> AppendEntriesReply {
+    pub fn append_entries_rpc(&mut self, args: AppendEntriesArgs) -> AppendEntriesReply {
         if args.term < self.current_term {
             return AppendEntriesReply {
                 term: self.current_term,
@@ -109,7 +116,7 @@ impl RaftNode {
         }
     }
 
-    pub fn handle_request_vote(&mut self, args: RequestVoteArgs) -> RequestVoteReply {
+    pub fn request_vote_rpc(&mut self, args: RequestVoteArgs) -> RequestVoteReply {
         if args.term < self.current_term {
             return RequestVoteReply {
                 term: self.current_term,
